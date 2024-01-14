@@ -306,7 +306,7 @@ def delete_member(member_id):
         return jsonify({"error": "Team member not found", "success": False}), 404
 
 
-@app.route('/templates/index.html')
+@app.route('/get')
 def index():
     data = load_data()
     for member in data["members"]:
