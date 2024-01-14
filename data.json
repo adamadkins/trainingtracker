@@ -1,0 +1,62 @@
+{
+  "members": [
+    {
+      "id": 2206,
+      "first_name": "test",
+      "last_name": "test",
+      "start_date": "2024-01-12",
+      "category": "FOH",
+      "overall_progress": {
+        "ipads": 100.0,
+        "register": 100.0,
+        "dining_room": 100.0,
+        "front_counter_bagging": 100.0,
+        "mobile_bagging": 100.0,
+        "drive_through_bagging": 100.0,
+        "runner": 100.0,
+        "staging": 100.0,
+        "desserts": 100.0,
+        "primary_drinks": 100.0,
+        "secondary_drinks": 100.0
+      },
+      "average_percentage": 100.0
+    }
+  ],
+  "used_ids": [
+    5493,
+    9755,
+    7886,
+    4538,
+    1952,
+    3641,
+    4748,
+    2739,
+    5344,
+    4364,
+    9814,
+    8742,
+    1577,
+    3708,
+    9363,
+    1148,
+    4944,
+    1904,
+    6867,
+    6984,
+    3912,
+    5687,
+    9162,
+    4137,
+    5426,
+    4181,
+    2834,
+    2065,
+    2156,
+    6097,
+    4473,
+    1253,
+    2695,
+    5880,
+    2206
+  ]
+}
