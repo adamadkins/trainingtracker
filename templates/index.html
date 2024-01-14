@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Hires Training Progress</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
+</head>
+<div id="overlay"></div>
+<header>
+    <div class="search-container">
+        <a href="http://127.0.0.1:5000/"><img class="logo" src="../static/images/tt.png" alt="Training Tracker Logo"></a>
+        <img class="plus" src="../static/images/x.png" alt="Open Form" onclick="openForm()" draggable="false"><p class="add" onclick="openForm()">Add Team Member</p>
+        <p id="downloadExcel">Download Excel</p>
+    </div>
+</header>
+
+<body>
+<div class="body">
+    <div class="foh">
+        <div class="collapsible" onclick="toggleCollapse('fohSection')">Front of House (FOH)</div>
+        <div class="content" id="fohSection">
+            <ul>
+                {% for new_hire in foh_members %}
+                <li>
+                    <div class="collapsible" onclick="toggleCollapse('content{{ new_hire['id'] }}')">
+                        {{ new_hire["first_name"] }} {{ new_hire["last_name"] }} - Start Date: {{ new_hire["formatted_start_date"] }}
+                        <br>
+                        <span class="overall-progress" id="averageProgress">Overall Progress: {{ overall_progress_dict[new_hire.id]['average_percentage']}}%</span>
+                        <img class="x" onclick="deleteTeamMember({{ new_hire.id }})" src="../static/images/x.png" alt="Delete" draggable="false">
+                        <button class="saveProgressButton" type="button">Save New Progress</button>
+                    </div>
+                    <div class="content" id="content{{ new_hire['id'] }}">
+                        <ul class="fohp">
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-ipads')">iPads - Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-ipads-qualities">{{ overall_progress_dict[new_hire.id]['positions']['ipads']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-ipads" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="ipads">
+                                    {% set quality_names = ['Core 4', 'Pulling Up Cars', 'Running Lane 3', 'Repeating Orders', 'Car Description and Names', 'Menu Familiarity', 'Recalling Catering and Mobile Orders'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-ipads{{ quality_id }}">
+                                    </datalist>
+
+                                    <br>
+                                    {% endfor %}
+
+                                </div>
+                            </div>
+
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-register')">Register - Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-register-qualities">{{ overall_progress_dict[new_hire.id]['positions']['register']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-register" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="register">
+                                    {% set quality_names = ['Core 4', 'Names and Table Markers', 'Making Drinks', 'Carrying Food Out if Needed', 'Repeating Orders', 'Menu Familiarity', 'Recalling Catering and Mobile Orders'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-register-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-register-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-register{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+
+                                </div>
+                            </div>
+
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-dining_room')">Dining Room - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-dining_room-qualities">{{ overall_progress_dict[new_hire.id]['positions']['dining_room']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-dining_room" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="dining_room">
+                                    {% set quality_names = ['Second Mile', 'Trays', 'Trash', 'Refills', 'Attentiveness to Guests'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-dining_room-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-dining_room-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-dining_room{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-front_counter_bagging')">Front Counter Bagging - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-front_counter_bagging-qualities">{{ overall_progress_dict[new_hire.id]['positions']['front_counter_bagging']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-front_counter_bagging" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="front_counter_bagging">
+                                    {% set quality_names = ['Order Accuracy', 'Speed', 'Running Orders as Needed'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-front_counter_bagging-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-front_counter_bagging-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-front_counter_bagging{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-mobile_bagging')">Mobile Bagging - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-mobile_bagging-qualities">{{ overall_progress_dict[new_hire.id]['positions']['mobile_bagging']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-mobile_bagging" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="mobile_bagging">
+                                    {% set quality_names = ['Order Accuracy', 'Crisp-Double Fold', 'Speed', 'Making Drinks', 'Attentiveness to Dashers/Guests'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-mobile_bagging-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-mobile_bagging-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-mobile_bagging{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-drive_through_bagging')">Drive Through Bagging - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-drive_through_bagging-qualities">{{ overall_progress_dict[new_hire.id]['positions']['drive_through_bagging']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-drive_through_bagging" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="drive_through_bagging">
+                                    {% set quality_names = ['Order Accuracy', 'Bumping Receipts', 'Speed', 'Running Orders as Needed', 'Meat and Potatoes', 'Communication'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-drive_through_bagging-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-drive_through_bagging-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-drive_through_bagging{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-runner')">Drive Through Runner - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-runner-qualities">{{ overall_progress_dict[new_hire.id]['positions']['runner']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-runner" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="runner">
+                                    {% set quality_names = ['Speed', 'Greeting Guests', 'Pulling Cars Forward', 'Communication'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-runner-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-runner-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="runner{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-staging')">Staging - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-staging-qualities">{{ overall_progress_dict[new_hire.id]['positions']['staging']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-staging" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="staging">
+                                    {% set quality_names = ['Speed', 'Stocking as Needed', 'Keeping Drinks Clean'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-staging-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-staging-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-staging{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-desserts')">Desserts - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-desserts-qualities">{{ overall_progress_dict[new_hire.id]['positions']['desserts']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-desserts" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="desserts">
+                                    {% set quality_names = ['Speed', 'Presentation', 'Ingredient Knowledge', 'Cleanliness'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-desserts-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-desserts-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-desserts{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-primary_drinks')">Primary Drinks - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-primary_drinks-qualities">{{ overall_progress_dict[new_hire.id]['positions']['primary_drinks']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-primary_drinks" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="primary_drinks">
+                                    {% set quality_names = ['Speed', 'Wiping Down Drinks', 'Drink Markers', 'Cleanliness', 'Stocking as Needed'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-primary_drinks-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-primary_drinks-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-primary_drinks{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-secondary_drinks')">Secondary Drinks - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-secondary_drinks-qualities">{{ overall_progress_dict[new_hire.id]['positions']['secondary_drinks']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-secondary_drinks" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="secondary_drinks">
+                                    {% set quality_names = ['Making Teas', 'Stocking as Needed'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-secondary_drinks-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-secondary_drinks-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-secondary_drinks{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+        </div>
+    </div>
+
+
+    <div hidden class="boh">
+        <div class="collapsible" onclick="toggleCollapse('bohSection')">Back of House (BOH)</div>
+        <div class="content" id="bohSection">
+            <ul>
+                {% for new_hire in boh_members %}
+                <li>
+                    <div class="collapsible" onclick="toggleCollapse('content{{ new_hire['id'] }}')">
+                        {{ new_hire["first_name"] }} {{ new_hire["last_name"] }} - Start Date: {{ new_hire["formatted_start_date"] }}
+                        <br>
+                        Overall Progress: {{ overall_progress_dict[new_hire.id]['average_percentage']}}%
+                        <img class="x" onclick="deleteTeamMember({{ new_hire.id }})" src="../static/images/x.png" alt="Delete">
+
+                    </div>
+                    <div class="content" id="content{{ new_hire['id'] }}">
+                        <ul class="bohp">
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-fries')">Fries - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-fries-qualities">{{ overall_progress_dict[new_hire.id]['positions']['fries']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-fries" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="fries">
+                                    {% set quality_names = ['Core 4', 'Pulling Up Cars', 'Running Lane 3', 'Repeating Orders', 'Car Description and Names', 'Menu Familiarity', 'Recalling Catering and Mobile Orders'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-fries-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-fries{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-boards')">Boards - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-boards-qualities">{{ overall_progress_dict[new_hire.id]['positions']['boards']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-boards" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="boards">
+                                    {% set quality_names = ['Core 4', 'Names and Table Markers', 'Making Drinks', 'Carrying Food Out if Needed', 'Repeating Orders', 'Menu Familiarity', 'Recalling Catering and Mobile Orders'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-boards-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-boards{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-buns')">Buns - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-buns-qualities">{{ overall_progress_dict[new_hire.id]['positions']['buns']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-buns" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="buns">
+                                    {% set quality_names = ['Core 4', 'Names and Table Markers', 'Making Drinks', 'Carrying Food Out if Needed', 'Repeating Orders', 'Menu Familiarity', 'Recalling Catering and Mobile Orders'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-buns-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-buns{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-nuggets')">Nuggets - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-nuggets-qualities">{{ overall_progress_dict[new_hire.id]['positions']['nuggets']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-nuggets" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="nuggets">
+                                    {% set quality_names = ['Quality1', 'Quality2', 'Quality3', 'Quality4', 'Quality5', 'Quality6', 'Quality7'] %}
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-nuggets-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-nuggets{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-dishes')">Dishes - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-dishes-qualities">{{ overall_progress_dict[new_hire.id]['positions']['dishes']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-dishes" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="dishes">
+                                    {% set quality_names = ['Quality1', 'Quality2', 'Quality3', 'Quality4', 'Quality5', 'Quality6', 'Quality7'] %}  <!-- Replace with actual qualities for dishes -->
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-dishes-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-dishes{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-grill')">Grill - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-grill-qualities">{{ overall_progress_dict[new_hire.id]['positions']['grill']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-grill" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="grill">
+                                    {% set quality_names = ['Quality1', 'Quality2', 'Quality3', 'Quality4', 'Quality5', 'Quality6', 'Quality7'] %}  <!-- Replace with actual qualities for grill -->
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-grill-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-grill{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-machines')">Machines - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-machines-qualities">{{ overall_progress_dict[new_hire.id]['positions']['machines']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-machines" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="machines">
+                                    {% set quality_names = ['Quality1', 'Quality2', 'Quality3', 'Quality4', 'Quality5', 'Quality6', 'Quality7'] %}  <!-- Replace with actual qualities for machines -->
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-machines-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-machines{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <li class="collapsible" onclick="toggleCollapse('{{ new_hire['id'] }}-table')">Table - Overall Progress: <span class="overall-progress" id="overallProgress{{ new_hire['id'] }}-table-qualities">{{ overall_progress_dict[new_hire.id]['positions']['table']}}%</span></li>
+                            <div id="{{ new_hire['id'] }}-table" class="content">
+                                <div class="qualities" data-new-hire-id="{{ new_hire['id'] }}" data-position-id="table">
+                                    {% set quality_names = ['Quality1', 'Quality2', 'Quality3', 'Quality4', 'Quality5', 'Quality6', 'Quality7'] %}  <!-- Replace with actual qualities for table -->
+                                    {% for quality_id, quality_name in enumerate(quality_names) %}
+                                    {{ quality_name }}:
+                                    <label>
+                                        <input class="slider" type="range" min="1" max="5" step="1" value="1" id="slider-{{ new_hire['id'] }}-table-{{ quality_id }}" oninput="updateOverallProgress(this)">
+                                        <span class="quality" data-quality-id="slider-{{ new_hire['id'] }}-ipads-{{ quality_id }}">Needs Work</span>
+                                    </label>
+                                    <datalist id="sliderValues-table{{ quality_id }}">
+                                    </datalist>
+                                    <br>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+        </div>
+    </div>
+</div>
+
+</body>
+
+<div class="form-popup" id="myForm">
+    <form method="post" action="/add_new_member" class="form">
+        <label for="first_name">First Name:</label>
+        <input type="text" id="first_name" name="first_name" required><br>
+
+        <label for="last_name">Last Name:</label>
+        <input type="text" id="last_name" name="last_name" required><br>
+
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" required><br>
+
+        <label for="category">Category:</label>
+        <select id="category" name="category" required>
+            <option value="FOH">Front of House</option>
+            <option value="BOH">Back of House</option>
+        </select><br>
+
+        <input type="submit" value="Add Team Member">
+        <img class="close" src="../static/images/x.png" alt="Open Form" onclick="closeForm()">
+    </form>
+</div>
+<script src="../static/script.js"></script>
+</html>
